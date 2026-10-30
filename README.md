@@ -1,3 +1,5 @@
+![Banner](banner.png)
+
 # analyze-code-dependency-scanner
 Scans code repositories for outdated or vulnerable dependencies, leveraging public vulnerability databases and dependency version information to identify potential security risks. - Focused on Data analysis and reporting
 
