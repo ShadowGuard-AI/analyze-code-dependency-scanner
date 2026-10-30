@@ -3,7 +3,7 @@ import logging
 import os
 import subprocess
 import pandas as pd
-import re
+import sys
 import json
 
 # Configure logging
@@ -44,8 +44,7 @@ def get_dependencies(repo_path, package_manager):
     try:
         if package_manager == 'pip':
             result = subprocess.run(['pip', 'freeze'], capture_output=True, text=True, cwd=repo_path, check=True)
-            dependencies = [line.split('==') for line in result.stdout.strip().split('\n')]
-            return [{'name': dep[0], 'version': dep[1] if len(dep) > 1 else 'N/A'} for dep in dependencies]
+            return _parse_pip_freeze(result.stdout)
         elif package_manager == 'npm':
             result = subprocess.run(['npm', 'list', '--depth=0', '--json'], capture_output=True, text=True, cwd=repo_path, check=True)
             data = json.loads(result.stdout)
@@ -60,8 +59,11 @@ def get_dependencies(repo_path, package_manager):
             dependencies = []
             if 'data' in data:
                 for item in data['data']['trees']:
-                  dep = item['name'].split("@")
-                  dependencies.append({'name': dep[0], 'version': dep[1]})
+                  # Yarn names can start with @ (scoped packages), so a
+                  # plain split on "@" mangles them. Split off only the
+                  # trailing version, from the right.
+                  name, _, version = item['name'].rpartition("@")
+                  dependencies.append({'name': name or item['name'], 'version': version or 'N/A'})
             return dependencies
         else:
             logging.error("Unsupported package manager: %s", package_manager)
@@ -72,6 +74,20 @@ def get_dependencies(repo_path, package_manager):
     except json.JSONDecodeError as e:
         logging.error("Error decoding JSON output: %s", e)
         return []
+
+
+def _parse_pip_freeze(output):
+    # pip freeze emits one "name==version" line per package, but editable
+    # installs show up as "-e git+..." lines and blank lines appear at the
+    # ends. Both used to become phantom packages with an empty name.
+    dependencies = []
+    for line in output.splitlines():
+        line = line.strip()
+        if not line or line.startswith("-e ") or "==" not in line:
+            continue
+        name, version = line.split("==", 1)
+        dependencies.append({'name': name, 'version': version})
+    return dependencies
 
 
 def check_vulnerabilities(dependencies):
@@ -147,17 +163,18 @@ def main():
     package_manager = args.package_manager
     ignore_vulnerabilities_file = args.ignore_vulnerabilities
 
-    # Validate repo_path
+    # Validate repo_path. Exit nonzero, as with the other early stops in
+    # this function, so callers can tell a bad path from a clean scan.
     if not os.path.isdir(repo_path):
         logging.error("Invalid repository path: %s", repo_path)
-        return
+        sys.exit(1)
 
     # Detect package manager if not specified
     if not package_manager:
         package_manager = detect_package_manager(repo_path)
         if not package_manager:
             logging.warning("Could not automatically detect package manager.  Please specify with the -p option.")
-            return
+            sys.exit(1)
 
     logging.info("Scanning repository: %s using package manager: %s", repo_path, package_manager)
 
@@ -180,21 +197,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Usage Examples:
-# 1. Scan a repository and generate a CSV report:
-#    python main.py /path/to/repo
-#
-# 2. Scan a repository, specify the output path and format:
-#    python main.py /path/to/repo -o my_report.json -f json
-#
-# 3. Scan a repository using a specific package manager (pip):
-#    python main.py /path/to/repo -p pip
-#
-# 4. Scan a repository and ignore specific vulnerabilities using a json file:
-#    python main.py /path/to/repo --ignore-vulnerabilities ignore_list.json
-#
-# ignore_list.json example:
-# [
-#    "CVE-2023-1234",
-#    "CVE-2023-5678"
-# ]
