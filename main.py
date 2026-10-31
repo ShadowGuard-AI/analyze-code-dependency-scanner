@@ -5,6 +5,7 @@ import subprocess
 import pandas as pd
 import sys
 import json
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -14,7 +15,7 @@ def setup_argparse():
     """
     Sets up the argument parser for the CLI.
     """
-    parser = argparse.ArgumentParser(description="Scans code repositories for outdated or vulnerable dependencies.")
+    parser = argparse.ArgumentParser(description="Lists the dependencies a repository declares and checks them against a small built in example table (requests 2.28.0 and django 3.2.0). No vulnerability database is queried, and no outdated version comparison is made.")
     parser.add_argument("repo_path", help="Path to the code repository.")
     parser.add_argument("-o", "--output", help="Path to the output file (CSV or JSON). Defaults to 'dependency_report.csv'.", default="dependency_report.csv")
     parser.add_argument("-f", "--format", help="Output format: csv or json. Defaults to csv.", choices=['csv', 'json'], default='csv')
@@ -40,11 +41,13 @@ def detect_package_manager(repo_path):
 def get_dependencies(repo_path, package_manager):
     """
     Retrieves the list of dependencies and their versions using the specified package manager.
+    For pip, the target repository's requirements.txt is parsed directly.
+    Returns None when retrieval fails, so a failure is not mistaken for
+    an empty dependency set.
     """
     try:
         if package_manager == 'pip':
-            result = subprocess.run(['pip', 'freeze'], capture_output=True, text=True, cwd=repo_path, check=True)
-            return _parse_pip_freeze(result.stdout)
+            return _parse_requirements_file(repo_path)
         elif package_manager == 'npm':
             result = subprocess.run(['npm', 'list', '--depth=0', '--json'], capture_output=True, text=True, cwd=repo_path, check=True)
             data = json.loads(result.stdout)
@@ -67,35 +70,65 @@ def get_dependencies(repo_path, package_manager):
             return dependencies
         else:
             logging.error("Unsupported package manager: %s", package_manager)
-            return []
+            return None
     except subprocess.CalledProcessError as e:
         logging.error("Error retrieving dependencies: %s", e)
-        return []
+        return None
+    except FileNotFoundError as e:
+        logging.error("Error retrieving dependencies: %s", e)
+        return None
     except json.JSONDecodeError as e:
         logging.error("Error decoding JSON output: %s", e)
-        return []
+        return None
 
 
-def _parse_pip_freeze(output):
-    # pip freeze emits one "name==version" line per package, but editable
-    # installs show up as "-e git+..." lines and blank lines appear at the
-    # ends. Both used to become phantom packages with an empty name.
+def _parse_requirements_file(repo_path):
+    """
+    Reads the target repository's own requirements.txt and returns the
+    packages declared in it. Returns None if the file cannot be read,
+    so the caller can tell a retrieval failure apart from a file that
+    declares no packages.
+    """
+    requirements_path = os.path.join(repo_path, 'requirements.txt')
+    try:
+        with open(requirements_path, 'r') as f:
+            text = f.read()
+    except OSError as e:
+        logging.error("Error reading requirements file %s: %s", requirements_path, e)
+        return None
+    return _parse_requirements(text)
+
+
+def _parse_requirements(text):
+    # One requirement per line as written in the file: a package name
+    # plus whatever version specifier the author wrote ("==1.0.0",
+    # ">=2.0", or nothing). Comment and blank lines carry no package,
+    # and option lines (starting with "-") are pip instructions, not
+    # packages, so both are skipped.
     dependencies = []
-    for line in output.splitlines():
+    for line in text.splitlines():
         line = line.strip()
-        if not line or line.startswith("-e ") or "==" not in line:
+        if not line or line.startswith("#") or line.startswith("-"):
             continue
-        name, version = line.split("==", 1)
-        dependencies.append({'name': name, 'version': version})
+        line = line.split(" #", 1)[0].strip()
+        line = line.split(";", 1)[0].strip()
+        if not line:
+            continue
+        match = re.match(r"([A-Za-z0-9._-]+)(\[[^\]]*\])?\s*(.*)", line)
+        if not match:
+            continue
+        dependencies.append({'name': match.group(1), 'version': match.group(3).strip()})
     return dependencies
 
 
 def check_vulnerabilities(dependencies):
     """
-    Checks for known vulnerabilities in the dependencies using a (placeholder) vulnerability database.
-    In a real-world scenario, this would involve querying an actual vulnerability database.
+    Checks the dependencies against the small built in example table
+    below. No vulnerability database is queried, and no version is
+    compared for being outdated: a package is flagged only when its
+    pinned version is exactly the version listed in the table.
     """
-    vulnerability_db = {  # Placeholder vulnerability database
+    vulnerability_db = {  # Built in example table: two packages, one version each
         "requests": {"version": "2.28.0", "vulnerabilities": ["CVE-2023-1234", "CVE-2023-5678"]},
         "django": {"version": "3.2.0", "vulnerabilities": ["CVE-2022-9012"]}
     }
@@ -104,9 +137,10 @@ def check_vulnerabilities(dependencies):
         name = dependency['name']
         version = dependency['version']
 
-        if name in vulnerability_db:
-            if vulnerability_db[name]["version"] == version:
-                dependency['vulnerabilities'] = vulnerability_db[name]["vulnerabilities"]
+        pinned = version[2:].strip() if version.startswith("==") else version.strip()
+        if name.lower() in vulnerability_db:
+            if vulnerability_db[name.lower()]["version"] == pinned:
+                dependency['vulnerabilities'] = vulnerability_db[name.lower()]["vulnerabilities"]
             else:
                 dependency['vulnerabilities'] = []
         else:
@@ -180,9 +214,13 @@ def main():
 
     dependencies = get_dependencies(repo_path, package_manager)
 
+    if dependencies is None:
+        logging.error("Dependency retrieval failed for repository: %s using package manager: %s. No report was written.", repo_path, package_manager)
+        sys.exit(1)
+
     if not dependencies:
-        logging.warning("No dependencies found.")
-        return
+        logging.error("Zero dependencies found in repository: %s. Nothing was scanned, so no report was written.", repo_path)
+        sys.exit(1)
 
     dependencies = check_vulnerabilities(dependencies)
 
