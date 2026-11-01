@@ -28,6 +28,11 @@ def detect_package_manager(repo_path):
     """
     Detects the package manager used in the repository based on the presence of specific files.
     """
+    # First match wins, in this order. A repo with both a
+    # requirements.txt and a package.json is scanned as pip only, and
+    # the yarn branch is nearly unreachable on its own: a real yarn
+    # project carries a package.json, so it is claimed by npm above
+    # unless the caller passes -p yarn explicitly.
     if os.path.exists(os.path.join(repo_path, 'requirements.txt')):
         return 'pip'
     elif os.path.exists(os.path.join(repo_path, 'package.json')):
@@ -111,6 +116,10 @@ def _parse_requirements(text):
         if not line or line.startswith("#") or line.startswith("-"):
             continue
         line = line.split(" #", 1)[0].strip()
+        # Cutting at the semicolon drops the environment marker, so the
+        # same package listed twice for two different platforms comes
+        # out as two identical rows. For a declared list that is honest
+        # enough; merging them would pretend the file said one thing.
         line = line.split(";", 1)[0].strip()
         if not line:
             continue
@@ -137,6 +146,12 @@ def check_vulnerabilities(dependencies):
         name = dependency['name']
         version = dependency['version']
 
+        # Only an exact pin can ever match the table. A range like
+        # requests>=2.28.0 keeps its operator in the string compared
+        # below, so it never equals the bare version in the table even
+        # when the range includes that version. I keep that limit
+        # because resolving what a range actually installed is a
+        # different tool; this one reads what was declared.
         pinned = version[2:].strip() if version.startswith("==") else version.strip()
         if name.lower() in vulnerability_db:
             if vulnerability_db[name.lower()]["version"] == pinned:
@@ -159,6 +174,10 @@ def load_ignored_vulnerabilities(file_path):
     except json.JSONDecodeError:
         logging.error("Invalid JSON format in ignore vulnerabilities file: %s", file_path)
         return []
+    # Both failures return the same empty list, so a mistyped ignore
+    # file path and a broken ignore file both end as scan with nothing
+    # ignored. The caller cannot tell that apart from a valid empty
+    # ignore list; the log line is the only difference.
 
 
 def filter_vulnerabilities(dependencies, ignored_vulnerabilities):
