@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="A single dive: a diver slides down a rope, gathers at the oyster bed, and rises again">
+<rect x="0" y="0" width="1200" height="300" fill="#39474a"/>
+<rect x="0" y="0" width="1200" height="300" fill="#e9e7dd" opacity="0.10">
+<animate attributeName="opacity" values="0.10;0.22;0.10" dur="36s" repeatCount="indefinite"/>
+</rect>
+<line x1="240" y1="0" x2="240" y2="238" stroke="#141412" stroke-width="3"/>
+<line x1="960" y1="0" x2="960" y2="238" stroke="#141412" stroke-width="3" opacity="0.5"/>
+<line x1="600" y1="0" x2="600" y2="238" stroke="#141412" stroke-width="4"/>
+<rect x="588" y="96" width="24" height="14" fill="#e9c522"/>
+<rect x="588" y="168" width="24" height="14" fill="#e9c522"/>
+<ellipse cx="600" cy="248" rx="17" ry="12" fill="#1a1a18"/>
+<g fill="#101210">
+<g id="diver">
+<ellipse cx="0" cy="-26" rx="11" ry="13"/>
+<path d="M -2,-14 L -26,34 L -48,84 M -26,34 L 2,86" stroke="#101210" stroke-width="10" fill="none"/>
+<path d="M -4,-8 L 2,30 M -6,-6 L -30,22" stroke="#101210" stroke-width="8" fill="none"/>
+<animateTransform attributeName="transform" type="translate" values="612,60; 612,60; 612,120; 612,120; 612,196; 612,196; 612,60; 612,60" keyTimes="0;0.12;0.3;0.38;0.52;0.72;0.9;1" dur="44s" repeatCount="indefinite"/>
+</g>
+</g>
+<g id="basket" transform="translate(664,238)">
+<polygon points="-30,0 30,0 22,30 -22,30" fill="#7a603a"/>
+<line x1="-30" y1="0" x2="30" y2="0" stroke="#c63a2e" stroke-width="4"/>
+<g fill="#383834" stroke="#e9e7dd" stroke-width="1.5" opacity="0">
+<ellipse cx="-14" cy="-5" rx="10" ry="6"/><ellipse cx="6" cy="-6" rx="10" ry="6"/><ellipse cx="18" cy="-3" rx="9" ry="5"/>
+<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.55;0.68;0.9;1" dur="44s" repeatCount="indefinite"/>
+</g>
+</g>
+<rect x="0" y="252" width="1200" height="48" fill="#665f4e"/>
+<g fill="#34342f" stroke="#e9e7dd" stroke-width="1.6">
+<ellipse cx="120" cy="272" rx="19" ry="10"/><ellipse cx="330" cy="282" rx="17" ry="9"/><ellipse cx="520" cy="270" rx="19" ry="10"/><ellipse cx="820" cy="280" rx="17" ry="9"/><ellipse cx="1050" cy="272" rx="19" ry="10"/>
+</g>
+<g fill="#8a8272">
+<circle cx="200" cy="262" r="2"><animate attributeName="cx" values="200;260;200" dur="18s" repeatCount="indefinite"/></circle>
+<circle cx="700" cy="266" r="2"><animate attributeName="cx" values="700;640;700" dur="22s" repeatCount="indefinite"/></circle>
+<circle cx="1000" cy="260" r="2"><animate attributeName="cx" values="1000;1060;1000" dur="20s" repeatCount="indefinite"/></circle>
+</g>
+</svg>
