@@ -3,85 +3,65 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>analyze-code-dependency-scanner: The Pearl Diver's Breath</title>
-<meta name="description" content="Lists the dependencies a repository declares and checks them against two built in example entries only: requests at 2.28.0 and django at 3.2.0.">
+<title>analyze-code-dependency-scanner: The Stock Shelf</title>
+<meta name="description" content="Lists declared dependencies and checks them against a two entry built in example table only: requests 2.28.0 and django 3.2.0. No database queries, no outdated checks.">
 <style>
-@font-face{font-family:'Atkinson Hyperlegible Mono';src:url('fonts/AtkinsonHyperlegibleMono.ttf') format('truetype');}
-@font-face{font-family:'Alegreya Sans';src:url('fonts/AlegreyaSans.ttf') format('truetype');}
-:root{--black:#101210;--ash:#e9e7dd;--yel:#e9c522;--red:#c63a2e}
-*{box-sizing:border-box} body{margin:0;background:var(--black);color:var(--ash);font-family:'Alegreya Sans',sans-serif;line-height:1.65;border-left:5px solid var(--yel)}
-h1,h2{font-family:'Atkinson Hyperlegible Mono',monospace}
-.hero{min-height:100vh;background:url('assets/intro-banner.png') center/cover no-repeat;display:flex;flex-direction:column;justify-content:flex-end;padding:2rem 6vw;background-color:#39474a}
-.hero .panel{background:rgba(16,18,16,.88);padding:1.2rem 1.5rem;max-width:820px}
-.hero img.logo{width:170px;height:auto;background:var(--black)}
-img.banner{width:100%;height:auto;display:block}
-main{padding:0 6vw 3rem;max-width:1060px;margin:0 auto}
-nav{display:flex;flex-wrap:wrap;gap:.6rem;padding:1rem 6vw}
-.bandbtn{display:inline-block;background:var(--yel);color:var(--black);font-family:'Atkinson Hyperlegible Mono',monospace;text-decoration:none;padding:.45rem 1.1rem;border-bottom:3px solid var(--ash);transition:filter .15s}
-.bandbtn:hover{filter:brightness(1.18)}
-.bandbtn:active{transform:translateY(3px)}
-.bandbtn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
-a{color:var(--yel)} a .wt{display:inline-block;width:13px;height:13px;border-radius:50%;background:#26261f;border:2px solid var(--ash);margin-right:.4rem;vertical-align:-2px;transition:transform .2s}
-a:hover .wt{transform:rotate(28deg)}
-.basket{background:#171815;border:1px solid #3a3a34;padding:1.2rem 1.5rem;margin:1.4rem 0;position:relative;border-left:10px solid var(--yel)}
-.basket:before{content:'';display:block;height:12px;margin:-.4rem 0 .8rem;background:repeating-linear-gradient(45deg,#e9e7dd 0 3px,transparent 3px 10px),repeating-linear-gradient(-45deg,#e9e7dd 0 3px,transparent 3px 10px);opacity:.5}
-pre{background:#1d1e1a;padding:1rem;overflow-x:auto;font-family:'Atkinson Hyperlegible Mono',monospace;font-size:.9rem}
-.rope{height:10px;margin:2rem 0;background:repeating-linear-gradient(90deg,#c9c6ba 0 26px,#a9a69a 26px 30px);position:relative}
-.rope:after{content:'';position:absolute;left:50%;top:-4px;width:64px;height:18px;background:var(--yel)}
-footer{padding:1rem 6vw 2.4rem;max-width:1060px;margin:0 auto}
+@font-face{font-family:'Concert One';src:url('fonts/ConcertOne-400.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Manrope';src:url('fonts/Manrope-400.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Manrope';src:url('fonts/Manrope-500.woff2') format('woff2');font-weight:500}
+@font-face{font-family:'Manrope';src:url('fonts/Manrope-600.woff2') format('woff2');font-weight:600}
+@font-face{font-family:'Manrope';src:url('fonts/Manrope-700.woff2') format('woff2');font-weight:700}
+:root{--ground:#f0e8d8;--ink:#2e2416;--paper:#faf5ea;--line:#e0d3b4;--frame:#f6efdd;--accent:#2e7d46;--accentdk:#1f5c32;--accentlt:#bfe3cc;--herotitle:#fdf8ec;--herotext:#f2e9d4;--cardtitle:#5c3d17;--stripbg:#3d2c14;--striptext:#f6efdd;--footink:#8a7a5c;--headfont:'Concert One';--bodyfont:'Manrope'}
+*{box-sizing:border-box} body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--bodyfont),sans-serif;line-height:1.65}
+h1,h2{font-family:var(--headfont),sans-serif}
+.hero{background:linear-gradient(170deg,#a87f4e 0%,#8a6a48 55%,#63482a 100%);padding:2.2rem 6vw 1.8rem;border-bottom:8px solid var(--accent)}
+.hero .inner{max-width:1020px;margin:0 auto}
+.hero img.wide{width:100%;height:auto;display:block;border:5px solid var(--frame);border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.hero .row{display:flex;gap:1.1rem;align-items:flex-start;margin-top:1.2rem}
+.hero .row img{width:92px;height:92px;object-fit:cover;border-radius:6px;border:3px solid var(--frame);background:var(--frame)}
+.hero h1{margin:.1rem 0 .3rem;font-size:2.4rem;color:var(--herotitle)}
+.hero p{max-width:44rem;color:var(--herotext)}
+.hero a{color:var(--accentlt)}
+main{padding:0 6vw 3rem;max-width:1020px;margin:0 auto}
+.card{background:var(--paper);border:1px solid var(--line);border-top:8px solid #9a5b1e;padding:1.2rem 1.5rem;margin:1.6rem 0;box-shadow:0 2px 8px rgba(30,30,30,.14)}
+.card.accent{border-top-color:var(--accent)}
+.card h2{margin:.1rem 0 .5rem;font-size:1.6rem;color:var(--cardtitle)}
+.card p{margin:.4rem 0}
+.strip{background:var(--stripbg);color:var(--striptext);padding:1rem 1.2rem;overflow-x:auto;font-family:ui-monospace,Menlo,monospace;font-size:.92rem;border-radius:4px;border-left:6px solid var(--accent)}
+.btn{display:inline-block;background:var(--accent);color:#fff;font-family:var(--bodyfont),sans-serif;font-weight:700;text-decoration:none;padding:.55rem 1.1rem;border-radius:3px;margin:.3rem .4rem .3rem 0}
+.btn:hover{background:var(--frame);color:var(--accentdk)}.btn:active{transform:translateY(2px)}
+.btn:focus-visible{outline:2px dashed var(--accent);outline-offset:3px}
+a{color:var(--accentdk);font-weight:700}
+table{border-collapse:collapse}td{padding:.2rem .9rem .2rem 0;vertical-align:top}
+td:first-child{font-weight:700;color:var(--cardtitle);white-space:nowrap}
+ul{margin:.4rem 0;padding-left:1.2rem}li{margin:.25rem 0}
+.small{font-size:.92rem}
+footer{padding:0 6vw 2.5rem;max-width:1020px;margin:0 auto;color:var(--footink)}
 </style>
 </head>
 <body>
-<nav>
-<a class="bandbtn" href="#float">Check the declared list</a>
-<a class="bandbtn" href="#getting">CSV, the dive as taken</a>
-<a class="bandbtn" href="#bed">JSON, the dive written out</a>
-<a class="bandbtn" href="#ascent">Set aside named findings</a>
-</nav>
 <header class="hero">
-<div class="panel">
-<img class="logo" src="assets/logo.png" alt="One weighted rope with a diver midway down and an oyster bed below">
-<h1>analyze-code-dependency-scanner</h1>
-<p>Lists the dependencies a repository declares and checks them against a small built in example table only. That table, held in main.py, has exactly two entries, requests at 2.28.0 and django at 3.2.0.</p>
+<div class="inner">
+<img class="wide" src="assets/intro-banner.png" alt="The checker's hand lifting one amber bottle from its row and holding it toward the light, a blank green tag hanging from its neck by string, while his other hand holds a board of blurred handwritten lines and tick marks">
+<div class="row"><img src="assets/logo.png" alt="analyze-code-dependency-scanner logo: one amber bottle straight on at the centre of a pine shelf, its cream label band left blank and a green checkmark tag tied at its neck, rows of matching labelled bottles softening behind it"><div><h1>analyze-code-dependency-scanner</h1><p>Lists the dependencies a repository declares and checks them against a small built in example table only.</p><p><a class="btn" href="https://github.com/ShadowGuard-AI/analyze-code-dependency-scanner">Open the repo</a> <a class="btn" href="#usage">Usage</a></p></div></div>
 </div>
 </header>
-<img class="banner" src="assets/banner.png" alt="Three ropes from a named hull: one diver descending, one at the bed, one rising">
 <main>
-<section class="basket" id="float">
-<h2>Surface float: what this tool is and what it is not</h2>
-<p>This tool does not query public vulnerability databases and does not check whether packages are outdated, so a run with no flags means only that no declared package matched those two entries.</p>
-<p>Tag: Focused on Data analysis and reporting.</p>
-</section>
-<div class="rope"></div>
-<section class="basket" id="getting">
-<h2>First depth band: getting it</h2>
-<pre>git clone https://github.com/ShadowGuard-AI/analyze-code-dependency-scanner</pre>
-<p>Note: the clone address printed in the README names a differently spelled account, ShadowGuardAI without the hyphen. This site uses the canonical ShadowGuard-AI address.</p>
-</section>
-<div class="rope"></div>
-<section class="basket">
-<h2>Second depth band: the dive itself</h2>
-<pre>./analyze-code-dependency-scanner [params]</pre>
-<p>That line is the whole of the documented running instructions. The README gives no worked example, no sample repository, and no sample output, and this band says so rather than inventing a demonstration catch.</p>
-</section>
-<div class="rope"></div>
-<section class="basket" id="bed">
-<h2>The bed: the parameters, shell by shell</h2>
-<p><code>-h</code> shows the help message and exits.</p>
-<p><code>-f</code> sets the output format, csv or json, and defaults to csv.</p>
-<p><code>--ignore-vulnerabilities</code> takes the path to a JSON file containing a list of vulnerabilities to ignore.</p>
-<p><code>-o</code>: No description provided. <code>-p</code>: No description provided. Both are printed exactly that way, as named but undocumented.</p>
-<p><a href="https://github.com/ShadowGuard-AI/analyze-code-dependency-scanner"><span class="wt"></span>Read the source on GitHub</a></p>
-</section>
-<div class="rope"></div>
-<section class="basket" id="ascent">
-<h2>What no flags means</h2>
-<p>No flags means no match against requests 2.28.0 and django 3.2.0, nothing wider. Anyone who needs current vulnerability data will need a different tool alongside this one.</p>
-<p>License: Copyright (c) ShadowGuardAI, as the README prints it.</p>
-</section>
+<section class="card accent"><h2>The whole table</h2><p>The built in example table holds exactly two entries:</p><table>
+<tr><td><code>requests</code></td><td>2.28.0</td></tr>
+<tr><td><code>django</code></td><td>3.2.0</td></tr>
+</table><p>Every declared dependency is checked against those two entries, and nothing wider.</p></section>
+<section class="card"><h2>The limits, stated exactly</h2><p>This scanner does not query public vulnerability databases and does not check whether packages are outdated. A result with no flags only means no declared package matched requests at 2.28.0 or django at 3.2.0.</p></section>
+<section class="card" id="usage"><h2>Install and usage</h2><div class="strip">cd analyze-code-dependency-scanner<br>pip install -r requirements.txt<br><br>./analyze-code-dependency-scanner [params]</div></section>
+<section class="card"><h2>Parameters</h2><table>
+<tr><td><code>-h</code></td><td>show help message and exit</td></tr>
+<tr><td><code>-o</code></td><td>no description provided in the source; printed that way rather than given a guessed job</td></tr>
+<tr><td><code>-f</code></td><td>output format: csv or json. Defaults to csv</td></tr>
+<tr><td><code>-p</code></td><td>no description provided in the source; printed that way rather than given a guessed job</td></tr>
+<tr><td><code>--ignore-vulnerabilities</code></td><td>path to a JSON file containing a list of vulnerabilities to ignore</td></tr>
+</table></section>
+<section class="card accent"><h2>The files</h2><p class="small"><code>main.py</code>, the scanner itself, holding the two entry table. <code>requirements.txt</code>, its dependency (pandas). <code>LICENSE</code>, the MIT License. Full notes are in the <a href="https://github.com/ShadowGuard-AI/analyze-code-dependency-scanner">repo README</a>.</p></section>
 </main>
-<footer>
-<p>Theme: The Pearl Diver's Breath. Type: Atkinson Hyperlegible Mono for headings, Alegreya Sans for reading, both SIL Open Font License 1.1. No lettering reference was recorded for this theme, so none is embedded.</p>
-</footer>
+<footer><p>A short list, checked bottle by bottle, and nothing claimed beyond it.</p></footer>
 </body>
 </html>
