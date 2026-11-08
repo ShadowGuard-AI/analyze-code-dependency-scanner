@@ -1,10 +1,10 @@
-![Oyster bed at working depth, a diver paused partway down the central rope](intro-banner.png)
+![Intro scenery: the checker's hand lifting one amber bottle from its row and holding it toward the light, a blank green tag hanging from its neck by string, while his other hand holds a board of blurred handwritten lines and tick marks](intro-banner.png)
 
 # analyze-code-dependency-scanner
 
-*The Pearl Diver's Breath: a descent down one fixed rope to a short written list, checked shell by shell.*
+![Wordmark banner: tall pine shelves packed with amber bottles in exact rows filling a stock room, a checker standing on a short ladder writing on a board, one bottle near him carrying a pale green tag while the rest stand unmarked](banner.png)
 
-![Wordmark banner](banner.png)
+<p align="center"><img src="logo.png" alt="analyze-code-dependency-scanner logo: one amber bottle straight on at the centre of a pine shelf, its cream label band left blank and a green checkmark tag tied at its neck, rows of matching labelled bottles softening behind it" width="200"></p>
 
 ![Animated themed scene](scene.svg)
 
