@@ -8,7 +8,6 @@
 
 ![Animated themed scene](scene.svg)
 
-# analyze-code-dependency-scanner
 Lists the dependencies a repository declares and checks them against a small built in example table only: requests at 2.28.0 and django at 3.2.0, the two entries in main.py. It does not query public vulnerability databases and does not check whether packages are outdated, so a result with no flags only means no declared package matched those two entries. - Focused on Data analysis and reporting
 
 ## Install
